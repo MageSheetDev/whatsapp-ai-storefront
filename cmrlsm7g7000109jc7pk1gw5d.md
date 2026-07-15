@@ -22,17 +22,10 @@ A free download gets you emails from people who spent nothing, so they're not qu
 
 Gumroad handles the checkout. Google Sheets is the lead database. Apps Script is the glue: catch the sale, verify it's real, and send the next step.
 
-```mermaid
-flowchart LR
-  A[Gumroad checkout<br/>micro-commitment] --> B[Ping webhook]
-  B --> C[Apps Script doPost]
-  C --> D[Log lead to Sheet]
-  E[Time trigger] --> F[sendUpsells: each new lead]
-  F --> G[personalize -> GPT-4o-mini]
-  G --> H[Gmail upsell email]
-  H --> I[status = emailed]
-```
+![](https://cdn.hashnode.com/uploads/covers/69f77ba076c1469ba4cc3db6/6e4161ff-18b4-4712-bf84-7dcd9de0778e.png align="center")
 
+  
+  
 Make a sheet named `Leads` and add this so the code and the columns stay in sync:
 
 ```javascript
