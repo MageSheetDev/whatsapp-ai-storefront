@@ -8,6 +8,7 @@ slug: google-sheets-invoice-numbering-apps-script
 canonical: https://magesheet.com/blog/google-sheets-invoice-template
 cover: https://cdn.hashnode.com/uploads/covers/69f77ba076c1469ba4cc3db6/57db579c-b886-44c4-8a41-3612bdd0ce69.jpg
 ogImage: https://cdn.hashnode.com/uploads/og-images/69f77ba076c1469ba4cc3db6/91e1522a-23d5-4593-8ceb-5d2a3e7eddfc.jpg
+tags: javascript, automation, google-apps-script, googlesheets, magesheet
 
 ---
 
