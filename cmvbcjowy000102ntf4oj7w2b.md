@@ -138,12 +138,19 @@ const BATCH = 500; // my choice; keeps each job small
 
 // Pure: which rows go up, deduplicated, never an unsubscribed one.
 function buildContacts_(values) {
+  const rows = values.slice(1);
+  // One unsubscribed row blocks the address, wherever it sits,
+  // so a pasted duplicate cannot bring the person back.
+  const blocked = {};
+  rows.forEach(row => {
+    if (row[2] === 'unsubscribed') blocked[norm_(row[0])] = true;
+  });
   const seen = {};
   const out = [];
-  values.slice(1).forEach(row => {
+  rows.forEach(row => {
     const email = norm_(row[0]);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return;
-    if (row[2] === 'unsubscribed' || seen[email]) return;
+    if (blocked[email] || seen[email]) return;
     seen[email] = true;
     out.push({ Email: email, Name: String(row[1] || '') });
   });
@@ -244,7 +251,7 @@ Build the set once per run with `loadSuppression_()`, then call `canSend_(stop, 
 
 Apps Script services do not run outside Google, so I tested the three blocks in Node against a fake `UrlFetchApp` that behaves like the Mailjet endpoints above: the four actions as the bulk guide describes them, `Unsub` filtering, `ContactID` instead of email on list recipients, and a default page of 10.
 
-35 checks pass. They cover the remove-then-resync case, 25 unsubscribes against a page size of 10, an unsubscribed contact sitting on the second page of a 1,100-contact list, 1,201 rows split into three jobs, the lock, a 401 that still releases the lock, and the suppression set.
+38 checks pass. They cover the remove-then-resync case, a pasted duplicate of an unsubscribed address, 25 unsubscribes against a page size of 10, an unsubscribed contact sitting on the second page of a 1,100-contact list, 1,201 rows split into three jobs, the lock, a 401 that still releases the lock, and the suppression set.
 
 To check that the tests can fail, I broke the code six ways and reran them. Switching to `addforce` failed 1 check. Dropping the page size back to 10 failed 5. Skipping the pull before the push failed 4. Letting unsubscribed rows through `buildContacts_` failed 5. Narrowing the stop list to bounces only failed 2. Removing the `Offset` increment made `mjAll_` loop until the test process ran out of memory, which is the same thing a real run would do until Apps Script killed it at six minutes.
 
@@ -263,5 +270,7 @@ To check that the tests can fail, I broke the code six ways and reran them. Swit
 ## The one thing to keep
 
 Treat Mailjet's list as a copy of the sheet, not the other way round, and make the sheet the place where an unsubscribe can never be undone by a script. Pull before you push, push with `addnoforce`, and check the same record before any direct send. The full two-way setup, from the send loop and webhook to the dashboard formulas, is on the [MageSheet blog](https://magesheet.com/blog/google-sheets-mailjet-integration).
+
+**Update, October 19, 2026:** a reader pointed out that one bad paste could re-add someone who opted out. They were right. `buildContacts_` skipped the unsubscribed row but still pushed a second row with the same address, which is exactly the remove-then-resync case this post is about. It now blocks an address if any row for it is marked unsubscribed, and three new checks cover it.
 
 Built by the MageSheet team.
